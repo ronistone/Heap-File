@@ -55,6 +55,13 @@ template<typename T> class page{
       }
       return true;
     }
+    bool isFull(){
+      for(int i=0;i<REG_N;i++){
+        if(reg[i].empty())
+          return false;
+      }
+      return true;
+    }
     size_t slotsPage(){
       return REG_N;
     }
