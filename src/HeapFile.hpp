@@ -135,37 +135,6 @@ RID heap_file<T>::insert_reg(T data){
     cout << "NEW PAGE INSERTION" << endl;
   }
 
-
-  // // if(f.tellg() >= sizeof(page<T>)){
-  // //   f.seekp(-sizeof(page<T>),f.end);
-  // //   f.read((char *) &p,sizeof(page<T>));
-  // // }
-  //
-  //
-  // // Tenta inserir na ultima pagina
-  // if(in.setSlot(p.insert(data))==-1){
-  //   page<T> p1;
-  //   in.setSlot(p1.insert(data));
-  //
-  //   f.seekg(0,f.end);
-  //   f.write((char *) &p1, sizeof(p));
-  //   f.seekg(0, f.end);
-  //   size = f.tellg();
-  //   in.setPage((size/p1.sizePage())-1);
-  //   cout << "NEW PAGE INSERTION" << endl;
-  // }else{ // Caso não consiga inserir na ultima pagina insere uma pagina nova no arquivo
-  //
-  //   if(f.tellg() >= sizeof(page<T>)){
-  //     f.seekg(-sizeof(page<T>),f.end);
-  //   }else{
-  //     f.seekg(0,f.end);
-  //   }
-  //   f.write((char *) &p, sizeof(p));
-  //   cout << "RECORD INSERTED IN THE LAST PAGE" << endl;
-  //   f.seekg(0,f.end);
-  //   size = f.tellg();
-  //   in.setPage((size/p.sizePage())-1);
-  // }
   f.close();
   return in;
 }
