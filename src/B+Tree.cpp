@@ -47,6 +47,7 @@ class BPlusTree{
       BPlusTree* next, *ant;
       bool leaf;
       int nElem;
+      size_t _page_size_ = (2 * D * sizeof(T));
 
       BPlusTree(){
         nElem = 0;
@@ -59,6 +60,10 @@ class BPlusTree{
         leaf = isLeaf;
         next = NULL;
         ant = NULL;
+      }
+
+      int insertNode(T reg){
+
       }
 
 };
@@ -82,4 +87,5 @@ main(){
   cout << B.offset[0].getSlot() << "  " << B.offset[0].getPage()  << endl;
   cout << B.data[0] << endl;
   cout << sizeof(B.offset) << endl;
+  cout << B._page_size_ << endl;
 }

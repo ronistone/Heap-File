@@ -3,11 +3,11 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-#define PAGE_SIZE 64000
+//#define PAGE_SIZE 64000
 #define REG_N (size_t)(PAGE_SIZE/sizeof(T))
 #include "standard_reg.hpp"
 
-template<typename T> class page{
+template<typename T, int PAGE_SIZE> class page{
   private:
     T reg[REG_N];
 

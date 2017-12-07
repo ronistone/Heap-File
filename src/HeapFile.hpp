@@ -63,9 +63,9 @@ heap_file<T>::heap_file(string p){
   }else{
     int pag = 0;
     bool b;
-    page<T> p;
+    page<T,64000> p;
     fi.seekg(0, fi.beg);
-    while(fi.read((char*)&b,sizeof(bool)) and fi.read((char*) &p, sizeof(page<T>))){
+    while(fi.read((char*)&b,sizeof(bool)) and fi.read((char*) &p, sizeof(page<T, 64000>))){
       if(!b){
         notFullPage[pag] = true;
       }
@@ -80,7 +80,7 @@ heap_file<T>::heap_file(string p){
 template<class T>
 RID heap_file<T>::insert_reg(T data){
 
-  page<T> p;
+  page<T, 64000> p;
   RID in;
   bool b;
   fstream f(_PATH.c_str());
@@ -93,13 +93,13 @@ RID heap_file<T>::insert_reg(T data){
     it = notFullPage.begin();
     while(it!=notFullPage.end()){
       if(it->second){
-        f.seekp((it->first)*(sizeof(page<T>) + sizeof(bool)),f.beg);
+        f.seekp((it->first)*(sizeof(page<T,64000>) + sizeof(bool)),f.beg);
         f.read((char*)&b, sizeof(bool));
-        f.read((char*)&p, sizeof(page<T>));
+        f.read((char*)&p, sizeof(page<T, 64000>));
 
         in.setSlot(p.insert(data));
-        if(f.tellg() >= sizeof(page<T>)){
-          f.seekg((it->first)*(sizeof(bool) + sizeof(page<T>)),f.beg);
+        if(f.tellg() >= sizeof(page<T, 64000>)){
+          f.seekg((it->first)*(sizeof(bool) + sizeof(page<T, 64000>)),f.beg);
         }else{
           f.seekg(0,f.end);
         }
@@ -121,12 +121,12 @@ RID heap_file<T>::insert_reg(T data){
     }
     // create new empty page
   }else{
-    page<T> p1;
+    page<T, 64000> p1;
     in.setSlot(p1.insert(data));
     b = false;
     f.seekg(0,f.end);
     f.write((char *)&b,sizeof(bool));
-    f.write((char *) &p1, sizeof(page<T>));
+    f.write((char *) &p1, sizeof(page<T, 64000>));
     f.seekg(0, f.end);
     in.setPage((f.tellg()/(p1.sizePage()+sizeof(bool)))-1);
     if(!p1.isFull()){
@@ -145,21 +145,21 @@ void heap_file<T>::remove_reg(RID reg){
 
   if(reg.getPage()>=0 and reg.getSlot() >=0){
     fstream f(_PATH.c_str());
-    page<T> p;
+    page<T, 64000> p;
     bool b;
 
-    f.seekp(reg.getPage()*(sizeof(page<T>) + sizeof(bool)),f.beg);
+    f.seekp(reg.getPage()*(sizeof(page<T, 64000>) + sizeof(bool)),f.beg);
     f.read((char*) &b, sizeof(bool));
-    f.read((char*) &p, sizeof(page<T>));
+    f.read((char*) &p, sizeof(page<T, 64000>));
     p.remove(reg.getSlot());
 
     b = p.isFull();
     if(!b){
       notFullPage[reg.getPage()] = true;
     }
-    f.seekg(reg.getPage()*(sizeof(page<T>) + sizeof(bool)),f.beg);
+    f.seekg(reg.getPage()*(sizeof(page<T, 64000>) + sizeof(bool)),f.beg);
     f.write((char*) &b, sizeof(bool));
-    f.write((char*) &p, sizeof(page<T>));
+    f.write((char*) &p, sizeof(page<T, 64000>));
     cout << "REMOVE REGISTER PAGEID " << reg.getPage() << " SLOTID " << reg.getSlot() << endl;
 
     f.close();
@@ -175,14 +175,14 @@ template<class T>
 void heap_file<T>::update_reg(RID reg, T data){
   if(reg.getPage() >=0){
       fstream f(_PATH.c_str());
-      page<T> p;
+      page<T, 64000> p;
 
-      f.seekp(sizeof(bool) + (reg.getPage()*(sizeof(page<T>) + sizeof(bool))),f.beg);
-      f.read((char*) &p, sizeof(page<T>));
+      f.seekp(sizeof(bool) + (reg.getPage()*(sizeof(page<T, 64000>) + sizeof(bool))),f.beg);
+      f.read((char*) &p, sizeof(page<T, 64000>));
       p.update(reg.getSlot(),data);
 
-      f.seekg(sizeof(bool) + (reg.getPage()*(sizeof(page<T>) + sizeof(bool))),f.beg);
-      f.write((char*) &p, sizeof(page<T>));
+      f.seekg(sizeof(bool) + (reg.getPage()*(sizeof(page<T, 64000>) + sizeof(bool))),f.beg);
+      f.write((char*) &p, sizeof(page<T, 64000>));
       cout << "REGISTER UPDATED" << endl;
       f.close();
   }else{
@@ -200,7 +200,7 @@ void heap_file<T>::scan(){
   ifstream f(_PATH.c_str());
   bool b;
   if(f.good()){
-    page<T> p;
+    page<T, 64000> p;
     while(f.read((char*)&b,sizeof(bool)) and f.read((char *) &p,sizeof(p))){
       p.scan();
     }

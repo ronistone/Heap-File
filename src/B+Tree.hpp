@@ -61,6 +61,10 @@ class BPlusTree{
         ant = NULL;
       }
 
+      int insertNode(T reg){
+
+      }
+
 };
 
 template<int D, class T>
@@ -75,11 +79,11 @@ BPlusTree<D,T>* find(BPlusTree<D,T> b, int _key){
 #endif
 
 
-main(){
-  BPlusTree<4,int > B;
-  B.offset[0] = regID(2,4,5);
-  B.data[0] = 5;
-  cout << B.offset[0].getSlot() << "  " << B.offset[0].getPage()  << endl;
-  cout << B.data[0] << endl;
-  cout << sizeof(B.offset) << endl;
-}
+// main(){
+//   BPlusTree<4,int > B;
+//   B.offset[0] = regID(2,4,5);
+//   B.data[0] = 5;
+//   cout << B.offset[0].getSlot() << "  " << B.offset[0].getPage()  << endl;
+//   cout << B.data[0] << endl;
+//   cout << sizeof(B.offset) << endl;
+// }
