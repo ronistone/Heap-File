@@ -14,6 +14,7 @@ template<typename T, int PAGE_SIZE> class page{
   public:
     int insert(T data){
       for(int i=0;i<REG_N;i++){
+        reg[i].scan();
         if(reg[i].empty()){
           reg[i] = data;
           return i;
@@ -28,6 +29,16 @@ template<typename T, int PAGE_SIZE> class page{
           reg[i].clear();
         }
       }
+    }
+    int removeByKey(int key){
+      int flag = 0;
+      for(int i=0;i<REG_N;i++){
+        if(reg[i].getKey()==key){
+          reg[i].clear();
+          flag = 1;
+        }
+      }
+      return flag;
     }
     void remove(int slotId){
       if(slotId < REG_N and !reg[slotId].empty()){
@@ -67,6 +78,18 @@ template<typename T, int PAGE_SIZE> class page{
     }
     size_t sizePage(){
       return PAGE_SIZE;
+    }
+
+    T search(int key){
+        for(int i=0;i<REG_N;i++){
+          if(reg[i].getKey() == key)
+            return reg[i];
+        }
+        T aux;
+        return aux;
+    }
+    T getAt(int slotID){
+      return reg[slotID];
     }
 };
 

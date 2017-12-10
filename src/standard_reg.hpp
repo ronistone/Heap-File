@@ -6,10 +6,10 @@ using namespace std;
 
 template<size_t T> struct standard_reg{
   private:
-      int a;
+      long int a;
       unsigned short int size;
       char b[T];
-      int c;
+      long int  c;
 
   public:
       standard_reg();
@@ -20,6 +20,7 @@ template<size_t T> struct standard_reg{
       void clear();
       bool empty();
       void scan();
+      int getKey();
 };
 
 template<size_t T>
@@ -58,6 +59,11 @@ void standard_reg<T>::scan(){
        << "Size: " << size << endl
        << "B: " << b << endl
        << "C: " << c << endl;
+}
+
+template<size_t T>
+int standard_reg<T>::getKey(){
+  return a;
 }
 
 #endif
