@@ -82,6 +82,7 @@ class Directory {
         void insert(reg R, bool reinserted);
         reg search(int key);
         void display(bool duplicates);
+        void scan_heap();
 };
 
 template<class reg, int size_bucket>
@@ -100,8 +101,8 @@ Directory<reg,size_bucket>::Directory(int depth, char* path)
 template<class reg, int size_bucket>
 int Directory<reg,size_bucket>::hash(int n)
 {
-    return n%(1<<global_depth);
-    //return (n&((1<<global_depth)-1))? (n&((1<<global_depth)-1))-1:0;
+    //return n%(1<<global_depth);
+    return n&((1<<global_depth)-1);
 }
 
 template<class reg, int size_bucket>
@@ -114,6 +115,8 @@ template<class reg, int size_bucket>
 void Directory<reg,size_bucket>::grow(void)
 {
     int id;
+    cout << "GLOBAL " << endl;
+    cout << global_depth << endl;
     for(int i = 0 ; i < 1<<global_depth ; i++ ){
         id = heap->insert_page();
         heap->set_page(id,heap->get_page(i));
@@ -139,15 +142,19 @@ void Directory<reg, size_bucket>::insert(reg R, bool reinserted)
     int bucket_no = hash(R.getKey());
     int status = heap->insert_into(bucket_no, R);
 
-    if(status!=-1)
+    if(status>-1)
     {
         if(!reinserted)
             cout<<"Inserted key "<< R.getKey() <<" in bucket "<< bucket_no <<endl;
         else
             cout<<"Moved key "<< R.getKey() <<" to bucket "<< bucket_no <<endl;
     }
+    else if(status==-2){
+      cout << "KEY " << R.getKey() << " already exists in bucket" << endl;
+    }
     else
     {
+        //cout << "Falha na Inserção, necessario SPLIT" << endl;
         split(bucket_no);
         insert(R,reinserted);
     }
@@ -156,6 +163,7 @@ void Directory<reg, size_bucket>::insert(reg R, bool reinserted)
 template<class reg, int size_bucket>
 void Directory<reg, size_bucket>::split(int bucket_no)
 {
+
     int local_depth,pair_index,index_diff,dir_size,i;
     page<reg, size_bucket*sizeof(reg)> temp;
 
@@ -186,6 +194,7 @@ void Directory<reg, size_bucket>::split(int bucket_no)
     }
 
     for(int i=0;i<this -> bucket_size;i++)
+      if(!temp.getAt(i).empty())
         insert(temp.getAt(i),1);
 }
 
@@ -207,149 +216,15 @@ template<class reg, int size_bucket>
 void Directory<reg, size_bucket>::display(bool duplicates)
 {
     for(int i=0;i < (1 << global_depth);i++){
-      cout << "entrou" << endl;
+      cout << "SHOW BUCKET " << i << endl;
       heap->display(i);
+      cout << endl;
     }
-    // int i,j,d;
-    // string s;
-    // set<string> shown;
-    // cout<<"Global depth : "<<global_depth<<endl;
-    // for(i=0;i<buckets.size();i++)
-    // {
-    //     d = buckets[i].getDepth();
-    //     s = i;
-    //     if(duplicates || shown.find(s)==shown.end())
-    //     {
-    //         shown.insert(s);
-    //         for(j=d;j<=global_depth;j++)
-    //             cout<<" ";
-    //         cout<<s<<" => ";
-    //         heap->display(i);
-    //     }
-    // }
 }
 
-
-
-/* Bucket class functions */
-
-// Bucket::Bucket(int depth, int size)
-// {
-//     this->depth = depth;
-//     this->size = size;
-// }
-//
-// int Bucket::insert(int key, string value)
-// {
-//     map<int,string>::iterator it;
-//     it = values.find(key);
-//     if(it!=values.end())
-//         return -1;
-//     if(isFull())
-//         return 0;
-//     values[key] = value;
-//     return 1;
-// }
-//
-// int Bucket::remove(int key)
-// {
-//     map<int,string>::iterator it;
-//     it = values.find(key);
-//     if(it!=values.end())
-//     {
-//         values.erase(it);
-//         return 1;
-//     }
-//     else
-//     {
-//         cout<<"Cannot remove : This key does not exists"<<endl;
-//         return 0;
-//     }
-// }
-//
-// int Bucket::update(int key, string value)
-// {
-//     map<int,string>::iterator it;
-//     it = values.find(key);
-//     if(it!=values.end())
-//     {
-//         values[key] = value;
-//         cout<<"Value updated"<<endl;
-//         return 1;
-//     }
-//     else
-//     {
-//         cout<<"Cannot update : This key does not exists"<<endl;
-//         return 0;
-//     }
-// }
-//
-// void Bucket::search(int key)
-// {
-//     map<int,string>::iterator it;
-//     it = values.find(key);
-//     if(it!=values.end())
-//     {
-//         cout<<"Value = "<<it->second<<endl;
-//     }
-//     else
-//     {
-//         cout<<"This key does not exists"<<endl;
-//     }
-// }
-//
-// int Bucket::isFull(void)
-// {
-//     if(values.size()==size)
-//         return 1;
-//     else
-//         return 0;
-// }
-//
-// int Bucket::isEmpty(void)
-// {
-//     if(values.size()==0)
-//         return 1;
-//     else
-//         return 0;
-// }
-//
-// int Bucket::getDepth(void)
-// {
-//     return depth;
-// }
-//
-// int Bucket::increaseDepth(void)
-// {
-//     depth++;
-//     return depth;
-// }
-//
-// int Bucket::decreaseDepth(void)
-// {
-//     depth--;
-//     return depth;
-// }
-//
-// vector<regID> Bucket::copy(void)
-// {
-//     vector<regID> temp(values.begin(),values.end());
-//     //map<int, string> temp(values.begin(),values.end());
-//     return temp;
-// }
-//
-// void Bucket::clear(void)
-// {
-//     values.clear();
-// }
-//
-// void Bucket::display()
-// {
-//     map<int,string>::iterator it;
-//     for(it=values.begin();it!=values.end();it++)
-//         cout<<it->first<<" ";
-//     cout<<endl;
-// }
-
+template<class reg, int size_bucket>
+void Directory<reg, size_bucket>::scan_heap(){
+  heap->scan();
+}
 
 #endif

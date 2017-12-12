@@ -14,10 +14,11 @@ template<typename T, int PAGE_SIZE> class page{
   public:
     int insert(T data){
       for(int i=0;i<REG_N;i++){
-        reg[i].scan();
         if(reg[i].empty()){
           reg[i] = data;
           return i;
+        }else if(reg[i].getKey()==data.getKey()){
+          return -2;
         }
       }
       return -1;

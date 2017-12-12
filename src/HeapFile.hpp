@@ -59,9 +59,9 @@ heap_file<T, size_page>::heap_file(string p){
     fi.close();
     ofstream f(p.c_str());
     if(f.good()){
-      // cout << "HEAP FILE CREATE" << endl;
+      cout << "HEAP FILE CREATE" << endl;
     }else{
-      // cout << "HEAP FILE CREATION FAILED" << endl;
+      cout << "HEAP FILE CREATION FAILED" << endl;
     }
     f.close();
   }else{
@@ -147,15 +147,17 @@ template<class T, int size_page>
 int heap_file<T, size_page>::insert_page(){
   page<T, size_page> p;
   bool b = p.isFull();
-  ofstream f(_PATH.c_str());
+  fstream f(_PATH.c_str());
 
   f.seekp(0, f.end);
   f.write((char*)&b,sizeof(bool));
   f.write((char*)&p, sizeof(p));
-
-  int pageId = ((f.tellp()/(sizeof(p)+sizeof(bool)))-1);
-
   f.close();
+
+  fstream fi(_PATH.c_str());
+  fi.seekg(0,f.end);
+  int pageId = ((fi.tellg()/(sizeof(p)+sizeof(bool)))-1);
+  fi.close();
   notFullPage[pageId] = true;
   return pageId;
 }
@@ -181,14 +183,13 @@ int heap_file<T, size_page>::insert_into(int pageId, T reg){
 
   bool b;
   page<T, size_page> p;
-  cout << pageId << endl;
   f.seekg(pageId * (sizeof(bool)+ sizeof(p)), f.beg);
   f.read((char*) &b, sizeof(bool));
   f.read((char*) &p, sizeof(p));
 
   int result = p.insert(reg);
 
-
+  b = p.isFull();
   f.seekp(pageId * (sizeof(bool) + sizeof(p)), f.beg);
   f.write((char*) &b, sizeof(bool));
   f.write((char*) &p, sizeof(p));
@@ -336,6 +337,7 @@ void heap_file<T, size_page>::scan(){
     page<T, size_page> p;
     while(f.read((char*)&b,sizeof(bool)) and f.read((char *) &p,sizeof(p))){
       p.scan();
+      cout << "PAGE FOUND" << endl;
     }
   }else{
     cout << "READ FAILED" << endl;
