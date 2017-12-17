@@ -1,9 +1,9 @@
 compile: clear
-		g++ src/*.cpp -o main
+		g++ --std=c++11 src/*.cpp -o main -g
 
 safe-compile:
-		g++ src/*.cpp -o main
+		g++ --std=c++11 src/*.cpp -o main -g
 
 clear:
-		rm dados.d
+		rm *.data
 		rm main

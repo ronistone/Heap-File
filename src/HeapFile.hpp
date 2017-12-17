@@ -4,26 +4,7 @@
 using namespace std;
 
 #include "page.hpp"
-
-struct RID{
-  private:
-    int slotId,pageId;
-  public:
-    RID(){}
-    RID(int slot, int page): slotId(slot), pageId(page){}
-    int setSlot(int slot){
-      return slotId = slot;
-    }
-    int setPage(int page){
-      return pageId = page;
-    }
-    int getSlot(){
-      return slotId;
-    }
-    int getPage(){
-      return pageId;
-    }
-};
+#include "RID.hpp"
 
 template<class T, int size_page>
 class heap_file{
@@ -40,14 +21,15 @@ class heap_file{
     void set_page(int pageId, page<T, size_page> p);
     int insert_into(int pageId, T reg);
     T search(int pageId, int key);
-    page<T, size_page> get_page(int pageId);
+    page<T, size_page>* get_page(int pageId);
     void clear_page(int pageId);
-    void remove_reg(RID reg);
+    int remove_reg(RID reg);
     void remove_reg(int slotId, int pageId);
     int remove_regByKey(int slotId, int key);
     void update_reg(RID reg, T data);
     void update_reg(int slotId, int pageId, T data);
     void scan();
+    T getReg(RID r);
     void display(int pageId);
 
 };
@@ -75,7 +57,7 @@ heap_file<T, size_page>::heap_file(string p){
       }
       pag++;
     }
-    // cout << "HEAP FILE LOADED" << endl;
+    cout << "HEAP FILE LOADED" << endl;
     fi.close();
   }
   _PATH = p;
@@ -163,16 +145,23 @@ int heap_file<T, size_page>::insert_page(){
 }
 
 template<class T, int size_page>
-page<T, size_page> heap_file<T,size_page>::get_page(int pageId){
+page<T, size_page>* heap_file<T,size_page>::get_page(int pageId){
   ifstream f(_PATH.c_str());
 
   bool b;
-  page<T, size_page> p;
+  page<T, size_page>* p = new page<T,size_page>();
+  f.seekg(0,f.end);
+  if(((((int)f.tellg())/(int)(sizeof(*p)+sizeof(bool)))-1) < pageId){
+    f.close();
+    return NULL;
+  }
 
-  f.seekg(pageId * (sizeof(bool) + sizeof(p)),f.beg);
+  f.seekg(pageId * (sizeof(bool) + sizeof(*p)),f.beg);
   f.read((char*)&b,sizeof(bool));
-  f.read((char*) &p, sizeof(p));
+  f.read((char*) p, sizeof(*p));
+  p->scan();
 
+  f.close();
   return p;
 }
 
@@ -246,8 +235,8 @@ void heap_file<T,size_page>::set_page(int pageId, page<T, size_page> p){
 }
 
 template<class T, int size_page>
-void heap_file<T, size_page>::remove_reg(RID reg){
-
+int heap_file<T, size_page>::remove_reg(RID reg){
+  int result = 0;
   if(reg.getPage()>=0 and reg.getSlot() >=0){
     fstream f(_PATH.c_str());
     page<T, size_page> p;
@@ -256,7 +245,7 @@ void heap_file<T, size_page>::remove_reg(RID reg){
     f.seekg(reg.getPage()*(sizeof(page<T, size_page>) + sizeof(bool)),f.beg);
     f.read((char*) &b, sizeof(bool));
     f.read((char*) &p, sizeof(page<T, size_page>));
-    p.remove(reg.getSlot());
+    result = p.remove(reg.getSlot());
 
     b = p.isFull();
     if(!b){
@@ -269,6 +258,7 @@ void heap_file<T, size_page>::remove_reg(RID reg){
 
     f.close();
   }
+  return result;
 }
 
 template<class T, int size_page>
@@ -343,6 +333,21 @@ void heap_file<T, size_page>::scan(){
     cout << "READ FAILED" << endl;
   }
   f.close();
+}
+
+template<class T, int size_page>
+T heap_file<T, size_page>::getReg(RID r){
+  ifstream f(_PATH.c_str());
+
+  bool b;
+
+  page<T,size_page> p;
+
+  f.seekg(r.getPage() * (sizeof(bool)+sizeof(p)), f.beg);
+  f.read((char*) &b, sizeof(bool));
+  f.read((char*) &p, sizeof(p));
+
+  return p.getAt(r.getSlot());
 }
 
 template<class T, int size_page>

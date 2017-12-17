@@ -24,12 +24,14 @@ template<typename T, int PAGE_SIZE> class page{
       return -1;
     }
 
-    void remove(T data){
+    int remove(T data){
       for(int i=0;i<REG_N;i++){
         if(data == reg[i]){
           reg[i].clear();
+          return 1;
         }
       }
+      return 0;
     }
     int removeByKey(int key){
       int flag = 0;
@@ -41,10 +43,12 @@ template<typename T, int PAGE_SIZE> class page{
       }
       return flag;
     }
-    void remove(int slotId){
+    int remove(int slotId){
       if(slotId < REG_N and !reg[slotId].empty()){
         reg[slotId].clear();
+        return 1;
       }
+      return 0;
     }
     void update(int slotId, T data){
       if(slotId < REG_N and slotId >=0){
@@ -55,6 +59,7 @@ template<typename T, int PAGE_SIZE> class page{
     void scan(){
       for(int i=0;i<REG_N;i++){
         if(!reg[i].empty()){
+            cout << endl;
             reg[i].scan();
         }
       }
@@ -90,7 +95,10 @@ template<typename T, int PAGE_SIZE> class page{
         return aux;
     }
     T getAt(int slotID){
-      return reg[slotID];
+      if(slotID >= 0 and slotID < REG_N)
+        return reg[slotID];
+      else
+        return T();
     }
 };
 

@@ -8,31 +8,26 @@ void menu();
 void menu2();
 
 
-/* Main function */
-
 int main()
 {
-    bool show_duplicate_buckets;
-    int bucket_size, initial_global_depth, show_messages;
+    int initial_global_depth, show_messages;
     long int key, mode, c;
     char b[100];
-    char arquivo[] = "dados.d";
+    string arquivo;
     string choice, value;
 
-    // Set show_messages to 0 when taking input using file redirection
     cout << "Testar HEAP(1)\nTestar Hash(2)" << endl;
     cin >> show_messages;
-    //show_messages = 1;
-
-    // Set show_duplicate_buckets to 1 to see all pointers instead of unique ones
-    show_duplicate_buckets = 1;
+    cout << "Qual Arquivo deseja utilizar?\n>>> ";
+    cin >> arquivo;
+    arquivo += ".data";
 
     if(show_messages==2){
       if(show_messages) { cout<<"Bucket size 10" << endl; }
       if(show_messages) { cout<<"Initial global depth : "; }
       cin>>initial_global_depth;
 
-      Directory<standard_reg<10>,1> d(initial_global_depth, arquivo);
+      Directory<standard_reg<10>,10> d(initial_global_depth, (char*) arquivo.c_str());
       cout<<endl<<"Initialized directory structure"<<endl;
 
       menu();
@@ -67,7 +62,7 @@ int main()
           else if(choice=="display")
           {
               if(show_messages) { cout<<endl; }
-              d.display(show_duplicate_buckets);
+              d.display();
           }
           else if(choice=="scan"){
             d.scan_heap();
@@ -76,7 +71,7 @@ int main()
     }
     else{
       menu2();
-      heap_file<standard_reg<10>, sizeof(standard_reg<10>)*10> heap("dados.d");
+      heap_file<standard_reg<10>, sizeof(standard_reg<10>)*10> heap((char*)arquivo.c_str());
       do
       {
           cout<<endl;
@@ -85,8 +80,6 @@ int main()
           if(choice=="insert")
           {
               cout << "Será inserido 20 registro com A no intervalo [0-20)";
-              //cout<<"Key >>> ";
-              //cin >> key;
               cout<<"C >>> ";
               cin >> c;
               cout<<"String >>> ";

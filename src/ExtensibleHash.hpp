@@ -6,65 +6,9 @@ using namespace std;
 
 #include "HeapFile.hpp"
 #include "page.hpp"
+#include "BucketType.hpp"
+#include "RegID.hpp"
 #include "standard_reg.hpp"
-
-
-struct regID{
-  int key;
-  RID r;
-
-  regID(){}
-  regID(int slot, int page, int _key): key(_key){
-    r.setPage(page);
-    r.setSlot(slot);
-  }
-  int setSlot(int slot){
-    return r.setSlot(slot);
-  }
-  int setPage(int page){
-    return r.setPage(page);
-  }
-  int getSlot(){
-    return r.getSlot();
-  }
-  int getPage(){
-    return r.getPage();
-  }
-
-  bool operator <(regID b){ this->key < b.key; }
-  bool operator >(regID b){ this->key > b.key; }
-  bool operator ==(regID b){ this->key == b.key; }
-};
-
-class BucketType{
-      int depth, size;
-
-    public:
-      BucketType(){}
-      BucketType(int d, int s): depth(d), size(s){}
-      int getDepth(){
-        return depth;
-      }
-      int getSize(){
-        return size;
-      }
-      int setDepth(int d){
-        return depth = d;
-      }
-      int setSize(int s){
-        return size = s;
-      }
-      int increaseDepth(){
-          depth++;
-          return depth;
-      }
-
-      int decreaseDepth(){
-          depth--;
-          return depth;
-      }
-
-};
 
 template<class reg, int size_bucket>
 class Directory {
@@ -79,10 +23,11 @@ class Directory {
     public:
         Directory(int depth, char* path);
         void remove(int key);
-        void insert(reg R, bool reinserted);
+        void insert(reg R, bool reinserted, RID r = RID());
         reg search(int key);
-        void display(bool duplicates);
+        void display();
         void scan_heap();
+        void build();
 };
 
 template<class reg, int size_bucket>
@@ -93,21 +38,21 @@ Directory<reg,size_bucket>::Directory(int depth, char* path)
     heap = new heap_file<reg,sizeof(reg)*size_bucket>(path);
     for(int i = 0 ; i < 1<<depth ; i++ )
     {
-        heap->insert_page();
         buckets.push_back(BucketType(depth,this -> bucket_size));
     }
+    build();
 }
 
 template<class reg, int size_bucket>
 int Directory<reg,size_bucket>::hash(int n)
 {
-    //return n%(1<<global_depth);
     return n&((1<<global_depth)-1);
 }
 
 template<class reg, int size_bucket>
 int Directory<reg,size_bucket>::pairIndex(int bucket_no, int depth)
 {
+    cout << "bucket_no: " << bucket_no << "  DEPTH: " << depth << "  pair: " << (bucket_no^(1<<(depth-1))) << endl;
     return bucket_no^(1<<(depth-1));
 }
 
@@ -118,8 +63,6 @@ void Directory<reg,size_bucket>::grow(void)
     cout << "GLOBAL " << endl;
     cout << global_depth << endl;
     for(int i = 0 ; i < 1<<global_depth ; i++ ){
-        id = heap->insert_page();
-        heap->set_page(id,heap->get_page(i));
         buckets.push_back(buckets[i]);
     }
     global_depth++;
@@ -130,17 +73,31 @@ template<class reg, int size_bucket>
 void Directory<reg, size_bucket>::remove(int key)
 {
     int bucket_no = hash(key);
-    if(heap->remove_regByKey(bucket_no,key))
+
+    if(heap->remove_reg(buckets[bucket_no].getReg(key)) and buckets[bucket_no].remove(key)){
         cout<<"Deleted key "<< key <<" from bucket "<< bucket_no <<endl;
+    }
     else
       cout << "Key not found" << endl;
 }
 
 template<class reg, int size_bucket>
-void Directory<reg, size_bucket>::insert(reg R, bool reinserted)
+void Directory<reg, size_bucket>::insert(reg R, bool reinserted, RID r)
 {
     int bucket_no = hash(R.getKey());
-    int status = heap->insert_into(bucket_no, R);
+    int status;
+
+    if(!buckets[bucket_no].search(R.getKey())){
+      if(!reinserted){
+        r = heap->insert_reg(R);
+        if(r.getSlot()==-1)
+          status = -1;
+      }
+      if(status!=-1)
+        status = buckets[bucket_no].insert(regID(R.getKey(),r));
+    }else{
+      status = -2;
+    }
 
     if(status>-1)
     {
@@ -154,9 +111,8 @@ void Directory<reg, size_bucket>::insert(reg R, bool reinserted)
     }
     else
     {
-        //cout << "Falha na Inserção, necessario SPLIT" << endl;
         split(bucket_no);
-        insert(R,reinserted);
+        insert(R,reinserted,r);
     }
 }
 
@@ -165,7 +121,7 @@ void Directory<reg, size_bucket>::split(int bucket_no)
 {
 
     int local_depth,pair_index,index_diff,dir_size,i;
-    page<reg, size_bucket*sizeof(reg)> temp;
+    vector<regID> temp;
 
 
     local_depth = buckets[bucket_no].increaseDepth();
@@ -176,26 +132,31 @@ void Directory<reg, size_bucket>::split(int bucket_no)
     pair_index = pairIndex(bucket_no,local_depth);
     buckets[pair_index] = BucketType(local_depth,this -> bucket_size);
 
-    temp = heap->get_page(bucket_no);
+    temp = buckets[bucket_no].copy();
+    //temp = buckets[bucket_no];
+    buckets[bucket_no].clear();
 
-    heap->clear_page(bucket_no);
 
     index_diff = 1<<local_depth;
     dir_size = 1<<global_depth;
 
     for( i=pair_index-index_diff ; i>=0 ; i-=index_diff ){
-        heap->set_page(i, heap->get_page(pair_index));
         buckets[i] = buckets[pair_index];
     }
 
     for( i=pair_index+index_diff ; i<dir_size ; i+=index_diff ){
-        heap->set_page(i, heap->get_page(pair_index));
         buckets[i] = buckets[pair_index];
     }
-
-    for(int i=0;i<this -> bucket_size;i++)
-      if(!temp.getAt(i).empty())
-        insert(temp.getAt(i),1);
+    reg rTemp;
+    int hashTemp;
+    for(int i=0;i<buckets[bucket_no].getSize();i++){
+      if(!temp[i].empty()){
+        rTemp = heap->getReg(temp[i].getRID());
+        hashTemp = hash(rTemp.getKey());
+        buckets[hashTemp].remove(rTemp.getKey());
+        insert(rTemp, 1, temp[i].getRID());
+      }
+    }
 }
 
 template<class reg, int size_bucket>
@@ -213,18 +174,49 @@ reg Directory<reg, size_bucket>::search(int key)
 }
 
 template<class reg, int size_bucket>
-void Directory<reg, size_bucket>::display(bool duplicates)
+void Directory<reg, size_bucket>::display()
 {
+    regID a;
+    cout << "\n\n";
     for(int i=0;i < (1 << global_depth);i++){
-      cout << "SHOW BUCKET " << i << endl;
-      heap->display(i);
+      cout << "SHOW BUCKET " << i << " DEPTH " << buckets[i].getDepth() << endl;
+      for(int j=0;j<buckets[i].getSize();j++){
+        a = buckets[i].getAt(j);
+        if(!a.empty()){
+          heap->getReg(a.getRID()).scan();
+          cout << endl;
+        }
+      }
       cout << endl;
     }
+    cout << "\n\n";
 }
 
 template<class reg, int size_bucket>
 void Directory<reg, size_bucket>::scan_heap(){
   heap->scan();
 }
+
+template<class reg, int size_bucket>
+void Directory<reg, size_bucket>::build(){
+
+  page<reg, sizeof(reg)*size_bucket>* p;
+  reg aux;
+
+  for(int i=0;;i++){
+      p = heap->get_page(i);
+      if(p == NULL)
+        break;
+
+      for(int j=0;j < p->slotsPage();j++){
+        aux = p->getAt(j);
+        if(aux.empty())
+          continue;
+        insert(aux,1,RID(j,i));
+      }
+
+  }
+}
+
 
 #endif
