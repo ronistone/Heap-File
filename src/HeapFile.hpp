@@ -14,8 +14,9 @@ class heap_file{
     map<int,bool> notFullPage;  // (PageID,isFull?)
 
   public:
+    heap_file(){}
     heap_file(string p);
-
+    string getPATH(){ return _PATH;}
     RID insert_reg(T data);
     int insert_page();
     void set_page(int pageId, page<T, size_page> p);
@@ -206,6 +207,7 @@ T heap_file<T, size_page>::search(int pageId, int key){
 
   f.close();
 
+  p.scan();
   result = p.search(key);
 
   return result;
