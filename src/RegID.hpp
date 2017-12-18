@@ -43,6 +43,10 @@ struct regID{
   bool empty(){
     return key==-1;
   }
+  void print(){
+    cout << "Key: " << key << endl;
+    r.print();
+  }
   bool operator <(regID b){ this->key < b.key; }
   bool operator >(regID b){ this->key > b.key; }
   bool operator ==(regID b){ this->key == b.key; }

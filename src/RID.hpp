@@ -24,6 +24,10 @@ struct RID{
     int getPage(){
       return pageId;
     }
+    void print(){
+      cout << "SlotID: " << slotId << endl;
+      cout << "PageID: " << pageId << endl;
+    }
 };
 
 #endif

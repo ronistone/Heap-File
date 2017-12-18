@@ -21,7 +21,18 @@ template<size_t T> struct standard_reg{
       bool empty();
       void scan();
       int getKey();
+      char* getB();
+      long int getC();
 };
+
+template<size_t T>
+char* standard_reg<T>::getB(){
+  return b;
+}
+template<size_t T>
+long int standard_reg<T>::getC(){
+  return c;
+}
 
 template<size_t T>
 standard_reg<T>::standard_reg(){

@@ -17,10 +17,11 @@ class heap_file{
     heap_file(){}
     heap_file(string p);
     string getPATH(){ return _PATH;}
-    RID insert_reg(T data);
+    RID insert_reg(T data, int* count = NULL);
     int insert_page();
     void set_page(int pageId, page<T, size_page> p);
     int insert_into(int pageId, T reg);
+    T search(RID r);
     T search(int pageId, int key);
     page<T, size_page>* get_page(int pageId);
     void clear_page(int pageId);
@@ -65,7 +66,7 @@ heap_file<T, size_page>::heap_file(string p){
 }
 
 template<class T, int size_page>
-RID heap_file<T, size_page>::insert_reg(T data){
+RID heap_file<T, size_page>::insert_reg(T data, int* count){
 
   page<T, size_page> p;
   RID in;
@@ -93,6 +94,8 @@ RID heap_file<T, size_page>::insert_reg(T data){
         b = p.isFull();
         f.write((char* )&b, sizeof(bool));
         f.write((char *) &p, sizeof(p));
+        if(count != NULL)
+          (*count) +=2;
         cout << "RECORD INSERTED" << endl;
         f.seekg(0,f.end);
         in.setPage((f.tellg()/(p.sizePage()+sizeof(bool)))-1);
@@ -114,6 +117,8 @@ RID heap_file<T, size_page>::insert_reg(T data){
     f.seekp(0,f.end);
     f.write((char *)&b,sizeof(bool));
     f.write((char *) &p1, sizeof(page<T, size_page>));
+    if(count != NULL)
+      (*count) ++;
     f.seekg(0, f.end);
     in.setPage((f.tellg()/(p1.sizePage()+sizeof(bool)))-1);
     if(!p1.isFull()){
@@ -160,7 +165,6 @@ page<T, size_page>* heap_file<T,size_page>::get_page(int pageId){
   f.seekg(pageId * (sizeof(bool) + sizeof(*p)),f.beg);
   f.read((char*)&b,sizeof(bool));
   f.read((char*) p, sizeof(*p));
-  p->scan();
 
   f.close();
   return p;
@@ -194,6 +198,25 @@ int heap_file<T, size_page>::insert_into(int pageId, T reg){
 }
 
 template<class T, int size_page>
+T heap_file<T, size_page>::search(RID r){
+  ifstream f(_PATH.c_str());
+
+  bool b;
+  page<T, size_page> p;
+  T result;
+
+  f.seekg(r.getPage() * (sizeof(bool)+ sizeof(p)), f.beg);
+  f.read((char*) &b, sizeof(bool));
+  f.read((char*) &p, sizeof(p));
+
+  f.close();
+
+  result = p.getAt(r.getSlot());
+
+  return result;
+}
+
+template<class T, int size_page>
 T heap_file<T, size_page>::search(int pageId, int key){
   ifstream f(_PATH.c_str());
 
@@ -207,7 +230,6 @@ T heap_file<T, size_page>::search(int pageId, int key){
 
   f.close();
 
-  p.scan();
   result = p.search(key);
 
   return result;

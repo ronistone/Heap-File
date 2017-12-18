@@ -21,17 +21,20 @@ class Directory {
         void grow(void);
         void split(int bucket_no);
     public:
-        Directory(int depth, char* path);
+        Directory(){}
+        Directory(int depth, char* path, int* io = NULL);
         void remove(int key);
         void insert(reg R, bool reinserted, RID r = RID());
         reg search(int key);
+        bool verify(int key);
         void display();
         void scan_heap();
-        void build();
+        void build(int *io = NULL);
+        BucketType* getAt(int bucketID);
 };
 
 template<class reg, int size_bucket>
-Directory<reg,size_bucket>::Directory(int depth, char* path)
+Directory<reg,size_bucket>::Directory(int depth, char* path, int* io)
 {
     this->global_depth = depth;
     this->bucket_size = size_bucket;
@@ -40,7 +43,7 @@ Directory<reg,size_bucket>::Directory(int depth, char* path)
     {
         buckets.push_back(BucketType(depth,this -> bucket_size));
     }
-    build();
+    build(io);
 }
 
 template<class reg, int size_bucket>
@@ -163,12 +166,32 @@ template<class reg, int size_bucket>
 reg Directory<reg, size_bucket>::search(int key)
 {
     int bucket_no = hash(key);
+    reg result;
     cout<<"Searching key "<< key <<" in bucket "<< bucket_no <<endl;
-    reg result = heap->search(bucket_no,key);
+    for(int i=0;i<buckets[bucket_no].getSize();i++){
+      if(buckets[bucket_no].getAt(i).getKey() == key){
+        result = heap->search(buckets[bucket_no].getAt(i).getRID());
+        break;
+      }
+    }
     if(!result.empty()){
       cout << "it found" << endl;
     }else{
       cout << "This key does not exists" << endl;
+    }
+    return result;
+}
+
+template<class reg, int size_bucket>
+bool Directory<reg, size_bucket>::verify(int key)
+{
+    int bucket_no = hash(key);
+    bool result = false;
+    for(int i=0;i<buckets[bucket_no].getSize();i++){
+      if(buckets[bucket_no].getAt(i).getKey() == key){
+        result = true;
+        break;
+      }
     }
     return result;
 }
@@ -198,12 +221,14 @@ void Directory<reg, size_bucket>::scan_heap(){
 }
 
 template<class reg, int size_bucket>
-void Directory<reg, size_bucket>::build(){
+void Directory<reg, size_bucket>::build(int* io){
 
   page<reg, sizeof(reg)*size_bucket>* p;
   reg aux;
 
   for(int i=0;;i++){
+      if(io!=NULL)
+        (*io)++;
       p = heap->get_page(i);
       if(p == NULL)
         break;
@@ -218,5 +243,12 @@ void Directory<reg, size_bucket>::build(){
   }
 }
 
+template<class reg, int size_bucket>
+BucketType* Directory<reg,size_bucket>::getAt(int bucketID){
+  if(bucketID >=0 and bucketID < (1<<global_depth) )
+    return &buckets[bucketID];
+  else
+    return NULL;
+}
 
 #endif

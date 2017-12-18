@@ -6,4 +6,5 @@ safe-compile:
 
 clear:
 		rm *.data
+		rm *.join
 		rm main
