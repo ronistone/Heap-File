@@ -26,7 +26,7 @@ class heap_file{
     page<T, size_page>* get_page(int pageId);
     void clear_page(int pageId);
     int remove_reg(RID reg);
-    void remove_reg(int slotId, int pageId);
+    int remove_reg(int slotId, int pageId);
     int remove_regByKey(int slotId, int key);
     void update_reg(RID reg, T data);
     void update_reg(int slotId, int pageId, T data);
@@ -286,9 +286,9 @@ int heap_file<T, size_page>::remove_reg(RID reg){
 }
 
 template<class T, int size_page>
-void heap_file<T, size_page>::remove_reg(int slotId, int pageId){
+int heap_file<T, size_page>::remove_reg(int slotId, int pageId){
   RID reg(slotId,pageId);
-  remove_reg(reg);
+  return remove_reg(reg);
 }
 
 template<class T, int size_page>

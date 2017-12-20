@@ -219,28 +219,35 @@ int main()
             cin>>choice;
             if(choice=="1" and type==1)
             {
-                cout << "Será inserido 20 registro com A no intervalo [0-20)";
+                //cout << "Será inserido 20 registro com A no intervalo [0-20)";
+                cout << "Key >>";
+                cin >> key;
                 cout<<"C >>> ";
                 cin >> c;
                 cout<<"String >>> ";
                 cin >> b;
                 if(show_messages) { cout<<endl; }
-                for(int i=0;i<20;i++){
-                  heap->insert_reg(standard_reg<10>(i,b,c));
-                }
+                //for(int i=0;i<20;i++){
+                  heap->insert_reg(standard_reg<10>(key,b,c));
+                //}
                 cin.ignore();
                 cout << "Pressione enter para continuar..." << endl;
                 getchar();
             }
             else if(choice=="2")
             {
-                int slotid, pageid;
+                int slotid, pageid,result;
+                cout << "<slotID> <pageID>  >> ";
                 cin >> slotid >> pageid;
                 if(show_messages) { cout<<endl; }
                 if(type==1)
-                  heap->remove_reg(slotid, pageid);
+                  result = heap->remove_reg(slotid, pageid);
                 else
-                  heap1->remove_reg(slotid, pageid);
+                  result = heap1->remove_reg(slotid, pageid);
+                if(result)
+                  cout << "Removido" << endl;
+                else
+                  cout << "Não Foi Removido" << endl;
                 cin.ignore();
                 cout << "Pressione enter para continuar..." << endl;
                 getchar();
